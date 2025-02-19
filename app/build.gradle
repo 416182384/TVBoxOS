@@ -16,11 +16,9 @@ android {
             }
         }
     }
-
     packagingOptions {
         exclude 'META-INF/DEPENDENCIES'
     }
-
     buildTypes {
         debug {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
@@ -32,13 +30,13 @@ android {
         release {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             ndk {
                 abiFilters 'armeabi-v7a'
             }
             signingConfig signingConfigs.release
         }
     }
-
     signingConfigs {
         release {
             storeFile file('my-release-key.keystore')
@@ -47,17 +45,14 @@ android {
             keyPassword System.getenv("KEY_PASSWORD")
         }
     }
-
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-
     lintOptions {
         checkReleaseBuilds false
         abortOnError false
     }
-
     dexOptions {
         javaMaxHeapSize "4g"
         additionalParameters += '--multi-dex'
@@ -65,13 +60,13 @@ android {
         additionalParameters += '--minimal-main-dex'
     }
 }
-
 repositories {
     flatDir {
         dirs 'libs'
     }
+    google()
+    mavenCentral()
 }
-
 dependencies {
     api fileTree(dir: "libs", include: ["*.jar"])
     implementation 'org.nanohttpd:nanohttpd:2.3.1'
@@ -99,20 +94,8 @@ dependencies {
     implementation 'com.orhanobut:hawk:2.0.1'
     implementation project(":player")
     implementation project(":quickjs")
-    // implementation('org.xwalk:xwalk_shared_library:23.53.589.4') {
-    //     exclude group: 'com.android.support'
-    // }
     implementation 'com.lzy.net:okgo:3.0.4'
-    // implementation 'com.tencent.bugly:crashreport_upgrade:latest.release'
     implementation 'com.owen:tv-recyclerview:3.0.0'
     implementation 'com.github.getActivity:XXPermissions:13.6'
-    implementation 'org.jsoup:jsoup:1.14.1'
-    implementation 'com.github.hedzr:android-file-chooser:v1.2.0-final'
-    implementation 'commons-io:commons-io:2.11.0'
-    implementation 'com.googlecode.juniversalchardet:juniversalchardet:1.0.3'
-    implementation(name:'xwalk_shared_library-23.53.589.4',ext:'aar')
-    //支持http3
-    implementation ('com.google.net.cronet:cronet-okhttp:0.1.0')
-    // implementation 'com.google.android.gms:play-services-cronet:18.0.1'
-    implementation ('org.chromium.net:cronet-embedded:101.4951.41')
+    implementation 'org.jsoup:jsoup:1.13.1'
 }
