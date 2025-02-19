@@ -14,9 +14,11 @@ jobs:
           distribution: 'zulu'
           java-version: '11'  # 请根据你的项目需求选择合适的Java版本
       - name: Build With Gradle
+        env:
+          JAVA_OPTS: --add-opens java.base/java.io=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED
         run: |
           chmod +x gradlew
-          ./gradlew assemblerelease --build-cache --parallel --daemon --warning-mode all -Dorg.gradle.java.home=$(readlink -f $(which javac) | sed "s:/bin/javac::") -Djava.security.egd=file:/dev/./urandom --add-opens java.base/java.io=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED
+          ./gradlew assemblerelease --build-cache --parallel --daemon --warning-mode all
       - name: Prepare App
         run: |
           mkdir -p ${{ github.workspace }}/apk/
