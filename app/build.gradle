@@ -19,6 +19,17 @@ android {
     packagingOptions {
         exclude 'META-INF/DEPENDENCIES'
     }
+
+    // 确保 signingConfigs 在 buildTypes 之前定义
+    signingConfigs {
+        release {
+            storeFile file(System.getenv('KEYSTORE_FILE') ?: 'my-release-key.keystore')
+            storePassword System.getenv('KEYSTORE_PASSWORD')
+            keyAlias System.getenv('KEY_ALIAS')
+            keyPassword System.getenv('KEY_PASSWORD')
+        }
+    }
+
     buildTypes {
         debug {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
@@ -36,22 +47,17 @@ android {
             signingConfig signingConfigs.release
         }
     }
-    signingConfigs {
-        release {
-            storeFile file(System.getenv('KEYSTORE_FILE') ?: 'my-release-key.keystore')
-            storePassword System.getenv('KEYSTORE_PASSWORD')
-            keyAlias System.getenv('KEY_ALIAS')
-            keyPassword System.getenv('KEY_PASSWORD')
-        }
-    }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
     lintOptions {
         checkReleaseBuilds false
         abortOnError false
     }
+
     dexOptions {
         javaMaxHeapSize "4g"
         additionalParameters += '--multi-dex'
@@ -59,6 +65,7 @@ android {
         additionalParameters += '--minimal-main-dex'
     }
 }
+
 repositories {
     flatDir {
         dirs 'libs'
@@ -66,6 +73,7 @@ repositories {
     google()
     mavenCentral()
 }
+
 dependencies {
     api fileTree(dir: "libs", include: ["*.jar"])
     implementation 'org.nanohttpd:nanohttpd:2.3.1'
