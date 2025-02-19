@@ -23,7 +23,7 @@ jobs:
       run: ./gradlew assembleRelease -Pandroid.injected.signing.store.file=/dev/null -Pandroid.injected.signing.store.password= -Pandroid.injected.signing.key.alias= -Pandroid.injected.signing.key.password=
     - name: Decode Keystore
       run: |
-        echo ${{ secrets.KEYSTORE_FILE }} | base64 --decode > my-release-key.keystore
+        echo ${{ secrets.KEYSTORE_FILE_BASE64 }} | base64 --decode > my-release-key.keystore
         echo "KEYSTORE_FILE=my-release-key.keystore" >> $GITHUB_ENV
         echo "KEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> $GITHUB_ENV
         echo "KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> $GITHUB_ENV
