@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 // 添加一个任务来解码 base64 编码的密钥库文件
 task decodeKeystore(type: Copy) {
-    def keystoreFile = file('keystore.jks')
+    def keystoreFile = file('my-release-key.keystore')
     inputs.property('keystoreBase64', System.getenv('KEYSTORE_FILE_BASE64'))
     outputs.file(keystoreFile)
     doLast {
@@ -36,7 +36,7 @@ android {
     }
     signingConfigs {
         release {
-            storeFile file('keystore.jks')  // 指定密钥库路径
+            storeFile file(System.getenv('KEYSTORE_FILE'))  // 使用环境变量指定密钥库路径
             storePassword System.getenv('KEYSTORE_PASSWORD')  // 使用环境变量存储密码
             keyAlias System.getenv('KEY_ALIAS')  // 别名
             keyPassword System.getenv('KEY_PASSWORD')  // 密钥密码
@@ -115,8 +115,8 @@ dependencies {
     implementation 'com.googlecode.juniversalchardet:juniversalchardet:1.0.3'
     implementation(name: 'xwalk_shared_library-23.53.589.4', ext: 'aar')
     // 支持http3
-    implementation ('com.google.net.cronet:cronet-okhttp:0.1.0')
-    implementation ('org.chromium.net:cronet-embedded:101.4951.41')
+    implementation 'com.google.net.cronet:cronet-okhttp:0.1.0'
+    implementation 'org.chromium.net:cronet-embedded:101.4951.41'
 }
 
 // 确保在构建之前执行解码任务
