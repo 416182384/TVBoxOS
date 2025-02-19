@@ -67,6 +67,7 @@ repositories {
     }
     google()
     mavenCentral()
+    maven { url 'https://jitpack.io' }  // 添加 JitPack 仓库
 }
 
 dependencies {
@@ -97,5 +98,5 @@ dependencies {
     implementation project(":player")
     implementation project(":quickjs")
     implementation 'com.lzy.net:okgo:3.0.4'
-    implementation 'com.owen:tv-recyclerview:1.0.0'  // 请确保这是正确的版本号
+    implementation 'com.github.OwenTV:tv-recyclerview:1.0.0'  // 使用 JitPack 的正确坐标
 }
