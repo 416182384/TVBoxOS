@@ -1,4 +1,4 @@
-name: Test Build
+name: Build and Sign APK
 on:
   workflow_dispatch:
 jobs:
@@ -13,20 +13,28 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '11'  # 请根据你的项目需求选择合适的Java版本
-      - name: Build With Gradle
+      - name: Decode Keystore
+        run: |
+          echo "$KEYSTORE_FILE" | base64 --decode > my-release-key.keystore
+        env:
+          KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
+      - name: Build and Sign APK
         env:
           JAVA_OPTS: --add-opens java.base/java.io=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           chmod +x gradlew
           ./gradlew assemblerelease --build-cache --parallel --daemon --warning-mode all
       - name: Prepare App
         run: |
           mkdir -p ${{ github.workspace }}/apk/
-          for file in $(find ~ -name "*.apk" -print); do
+          for file in $(find . -name "*.apk" -print); do
             mv "$file" ${{ github.workspace }}/apk/
           done
-      - name: Upload App To Artifact
+      - name: Upload Signed APK to Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: com.github.tvbox.osc
+          name: signed-apk
           path: ${{ github.workspace }}/apk/
