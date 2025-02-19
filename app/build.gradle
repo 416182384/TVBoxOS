@@ -1,8 +1,22 @@
 apply plugin: 'com.android.application'
 
+// 添加一个任务来解码 base64 编码的密钥库文件
+task decodeKeystore(type: Copy) {
+    def keystoreFile = file('keystore.jks')
+    inputs.property('keystoreBase64', System.getenv('KEYSTORE_FILE_BASE64'))
+    outputs.file(keystoreFile)
+    doLast {
+        if (System.getenv('KEYSTORE_FILE_BASE64') != null) {
+            byte[] decodedBytes = Base64.getDecoder().decode(System.getenv('KEYSTORE_FILE_BASE64'))
+            keystoreFile.write(decodedBytes)
+        } else {
+            throw new GradleException("KEYSTORE_FILE_BASE64 environment variable is not set")
+        }
+    }
+}
+
 android {
     compileSdkVersion 30
-
     defaultConfig {
         applicationId 'com.github.tvbox.osc'
         minSdkVersion 16
@@ -10,23 +24,28 @@ android {
         versionCode 1
         versionName '1.0.0'
         multiDexEnabled true
-        //设置room的Schema的位置
+        // 设置room的Schema的位置
         javaCompileOptions {
             annotationProcessorOptions {
                 arguments = ["room.schemaLocation": "$projectDir/schemas".toString()]
             }
         }
     }
-
     packagingOptions {
         exclude 'META-INF/DEPENDENCIES'
     }
-
+    signingConfigs {
+        release {
+            storeFile file('keystore.jks')  // 指定密钥库路径
+            storePassword System.getenv('KEYSTORE_PASSWORD')  // 使用环境变量存储密码
+            keyAlias System.getenv('KEY_ALIAS')  // 别名
+            keyPassword System.getenv('KEY_PASSWORD')  // 密钥密码
+        }
+    }
     buildTypes {
         debug {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             minifyEnabled false
-
             ndk {
                 abiFilters 'armeabi-v7a'
             }
@@ -34,18 +53,16 @@ android {
         release {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             minifyEnabled true
-
             ndk {
                 abiFilters 'armeabi-v7a'
             }
+            signingConfig signingConfigs.release  // 关联到上面定义的签名配置
         }
     }
-
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-
     lintOptions {
         checkReleaseBuilds false
         abortOnError false
@@ -63,10 +80,9 @@ repositories {
         dirs 'libs'
     }
 }
+
 dependencies {
     api fileTree(dir: "libs", include: ["*.jar"])
-
-
     implementation 'org.nanohttpd:nanohttpd:2.3.1'
     implementation 'com.google.zxing:core:3.3.0'
     implementation 'androidx.appcompat:appcompat:1.3.0'
@@ -75,8 +91,6 @@ dependencies {
     implementation 'androidx.recyclerview:recyclerview:1.2.1'
     implementation files('libs/thunder.jar')
     implementation files('libs/commons-lang3-3.12.0.jar')
-
-
     implementation 'com.squareup.okhttp3:okhttp:3.12.11'
     annotationProcessor 'androidx.room:room-compiler:2.3.0'
     implementation 'androidx.room:room-runtime:2.3.0'
@@ -92,25 +106,20 @@ dependencies {
     }
     implementation 'org.greenrobot:eventbus:3.2.0'
     implementation 'com.orhanobut:hawk:2.0.1'
-
     implementation project(":player")
     implementation project(":quickjs")
-
-//    implementation('org.xwalk:xwalk_shared_library:23.53.589.4') {
-//        exclude group: 'com.android.support'
-//    }
     implementation 'com.lzy.net:okgo:3.0.4'
-    // implementation 'com.tencent.bugly:crashreport_upgrade:latest.release'
     implementation 'com.owen:tv-recyclerview:3.0.0'
-
     implementation 'com.github.getActivity:XXPermissions:13.6'
     implementation 'org.jsoup:jsoup:1.14.1'
     implementation 'com.github.hedzr:android-file-chooser:v1.2.0-final'
     implementation 'commons-io:commons-io:2.11.0'
     implementation 'com.googlecode.juniversalchardet:juniversalchardet:1.0.3'
-    implementation(name:'xwalk_shared_library-23.53.589.4',ext:'aar')
-    //支持http3
+    implementation(name: 'xwalk_shared_library-23.53.589.4', ext: 'aar')
+    // 支持http3
     implementation ('com.google.net.cronet:cronet-okhttp:0.1.0')
-//    implementation 'com.google.android.gms:play-services-cronet:18.0.1'
     implementation ('org.chromium.net:cronet-embedded:101.4951.41')
 }
+
+// 确保在构建之前执行解码任务
+assembleRelease.dependsOn decodeKeystore
