@@ -1,10 +1,6 @@
 name: Test Build
 
 on:
-#  push:
-#    branches:
-#      - main
-#  pull_request:
   workflow_dispatch:
 
 jobs:
@@ -17,15 +13,15 @@ jobs:
       - name: Build With Gradle
         run: |
           chmod +x gradlew
-          ./gradlew assemblerelease --build-cache --parallel --daemon --warning-mode all
+          JAVA_TOOL_OPTIONS="--add-opens java.base/java.io=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED" ./gradlew assemblerelease --build-cache --parallel --daemon --warning-mode all
       - name: Prepare App
         run: |
           mkdir -p ${{ github.workspace }}/apk/
-          for file in `find ~ -name "*.apk" -print`; do
+          for file in $(find ~ -name "*.apk" -print); do
             mv "$file" ${{ github.workspace }}/apk/
           done
       - name: Upload App To Artifact
         uses: actions/upload-artifact@v4
         with:
           name: com.github.tvbox.osc
-          path: ${{ github.workspace }}/apk/*
+          path: ${{ github.workspace }}/apk/
