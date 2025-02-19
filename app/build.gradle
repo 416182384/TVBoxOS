@@ -36,7 +36,7 @@ android {
     }
     signingConfigs {
         release {
-            storeFile file(System.getenv('KEYSTORE_FILE'))  // 使用环境变量指定密钥库路径
+            storeFile file('my-release-key.keystore')  // 使用解码后的密钥库文件路径
             storePassword System.getenv('KEYSTORE_PASSWORD')  // 使用环境变量存储密码
             keyAlias System.getenv('KEY_ALIAS')  // 别名
             keyPassword System.getenv('KEY_PASSWORD')  // 密钥密码
@@ -118,7 +118,6 @@ dependencies {
     implementation 'com.google.net.cronet:cronet-okhttp:0.1.0'
     implementation 'org.chromium.net:cronet-embedded:101.4951.41'
 }
-
 // 确保在构建之前执行解码任务
 tasks.whenTaskAdded { task ->
     if (task.name == 'assembleRelease') {
