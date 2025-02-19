@@ -17,6 +17,8 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 1.8
+    - name: Make gradlew executable
+      run: chmod +x ./gradlew
     - name: Build unsigned APK
       run: ./gradlew assembleRelease -Pandroid.injected.signing.store.file=/dev/null -Pandroid.injected.signing.store.password= -Pandroid.injected.signing.key.alias= -Pandroid.injected.signing.key.password=
     - name: Decode Keystore
