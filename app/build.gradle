@@ -2,6 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 34
+
     defaultConfig {
         applicationId 'com.github.tvbox.osc'
         minSdkVersion 16
@@ -16,9 +17,20 @@ android {
             }
         }
     }
+
     packagingOptions {
         exclude 'META-INF/DEPENDENCIES'
     }
+
+    signingConfigs {
+        release {
+            storeFile file(System.getenv("KEYSTORE_FILE"))
+            storePassword System.getenv("KEYSTORE_PASSWORD")
+            keyAlias System.getenv("KEY_ALIAS")
+            keyPassword System.getenv("KEY_PASSWORD")
+        }
+    }
+
     buildTypes {
         debug {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
@@ -36,26 +48,21 @@ android {
             signingConfig signingConfigs.release
         }
     }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
     lintOptions {
         checkReleaseBuilds false
         abortOnError false
     }
+
     dexOptions {
         javaMaxHeapSize "4g"
         additionalParameters += '--set-max-idx-number=48000'
         additionalParameters += '--minimal-main-dex'
-    }
-    signingConfigs {
-        release {
-            storeFile file(System.getenv("KEYSTORE_FILE"))
-            storePassword System.getenv("KEYSTORE_PASSWORD")
-            keyAlias System.getenv("KEY_ALIAS")
-            keyPassword System.getenv("KEY_PASSWORD")
-        }
     }
 }
 
@@ -103,5 +110,5 @@ dependencies {
     implementation 'com.googlecode.juniversalchardet:juniversalchardet:1.0.3'
     implementation(name: 'xwalk_shared_library-23.53.589.4', ext: 'aar')
     implementation 'com.google.net.cronet:cronet-okhttp:0.2.0'
-    implementation 'org.chromium.net:cronet-embedded:101.4951.41'
+    implementation 'org.chromium.net:chromium-net:83.0.4103.97'
 }
