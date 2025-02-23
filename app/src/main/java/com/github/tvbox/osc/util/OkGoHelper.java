@@ -21,8 +21,12 @@ import java.net.UnknownHostException;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -42,6 +46,7 @@ import xyz.doikki.videoplayer.exo.ExoMediaSourceHelper;
 public class OkGoHelper {
     public static final long DEFAULT_MILLISECONDS = 8000;      //默认的超时时间
 
+    static OkHttpClient ItvClient = null;
     static void initExoOkHttpClient() {
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
         HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor("OkExoPlayer");
@@ -68,8 +73,9 @@ public class OkGoHelper {
 
 //        builder.dns(dnsOverHttps);
         builder.dns(new CustomDns());
+        ItvClient=builder.build();
 
-        ExoMediaSourceHelper.getInstance(App.getInstance()).setOkClient(builder.build());
+        ExoMediaSourceHelper.getInstance(App.getInstance()).setOkClient(ItvClient);
     }
 
     public static DnsOverHttps dnsOverHttps = null;
@@ -135,34 +141,69 @@ public class OkGoHelper {
 
     // 自定义 DNS 解析器
     static class CustomDns implements Dns {
+        private  ConcurrentHashMap<String, List<InetAddress>> map;
+        private final String excludeIps = "2409:8087:6c02:14:100::14,2409:8087:6c02:14:100::18,39.134.108.253,39.134.108.245";
         @NonNull
         @Override
         public List<InetAddress> lookup(@NonNull String hostname) throws UnknownHostException {
-            if (myHosts == null)myHosts = ApiConfig.get().getMyHost(); //确保只获取一次减少消耗
+            if (myHosts == null){
+                myHosts = ApiConfig.get().getMyHost(); //确保只获取一次减少消耗
+                if(!myHosts.isEmpty())mapHosts(myHosts);
+            }
             // 判断输入是否为 IP 地址
             if (isValidIpAddress(hostname)) {
                 return Collections.singletonList(InetAddress.getByName(hostname));
+            } else if (!map.isEmpty() && map.containsKey(hostname)) {
+                return Objects.requireNonNull(map.get(hostname));
             } else {
-                if(!myHosts.isEmpty() && myHosts.containsKey(hostname))hostname=myHosts.get(hostname);
-                assert hostname != null;
 //                return (is_doh?dnsOverHttps:Dns.SYSTEM).lookup(hostname);
                 return (dnsOverHttps).lookup(hostname);
+            }
+        }
+
+        public synchronized void mapHosts(Map<String,String> hosts) {
+            map=new ConcurrentHashMap<>();
+            for (Map.Entry<String, String> entry : hosts.entrySet()) {
+                String key = entry.getKey();
+                String value = entry.getValue();
+                map.put(key,getAllByName(value));
+            }
+        }
+
+        private List<InetAddress> getAllByName(String host) {
+            try {
+                // 获取所有与主机名关联的 IP 地址
+                InetAddress[] allAddresses = InetAddress.getAllByName(host);
+                // 创建一个列表用于存储有效的 IP 地址
+                List<InetAddress> validAddresses = new ArrayList<>();
+                Set<String> excludeIpsSet = new HashSet<>();
+                for (String ip : excludeIps.split(",")) {
+                    excludeIpsSet.add(ip.trim());  // 添加到集合，去除多余的空格
+                }
+                for (InetAddress address : allAddresses) {
+                    if (!excludeIpsSet.contains(address.getHostAddress())) {
+                        validAddresses.add(address);
+                    }
+                }
+                return validAddresses;
+            } catch (Exception e) {
+                return new ArrayList<>();
             }
         }
 
         //简单判断减少开销
         private boolean isValidIpAddress(String str) {
             // 处理 IPv4 地址的判断
-            if (str.indexOf('.') > 0)return isValidIPv4(str);
+            if (str.indexOf('.') > 0) return isValidIPv4(str);
             // 处理 IPv6 地址的判断
-            if (str.indexOf(':') > 0)return true;
+            if (str.indexOf(':') > 0) return true;
             return false;
         }
 
         private boolean isValidIPv4(String str) {
             String[] parts = str.split("\\.");
             // IPv4 地址必须有 4 个部分
-            if (parts.length != 4)return false;
+            if (parts.length != 4) return false;
             // 检查每一部分是否是 0-255 的数字
             for (String part : parts) {
                 try {
